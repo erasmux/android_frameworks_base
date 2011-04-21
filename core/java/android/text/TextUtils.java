@@ -535,6 +535,7 @@ public class TextUtils {
         private int mEnd;
     }
 
+    /** @hide */
     public static CharSequence getMirror(CharSequence source,
                                           int start, int end) {
         return new Mirrorer(source, start, end);
