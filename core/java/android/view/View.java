@@ -1556,7 +1556,7 @@ public class View implements Drawable.Callback, KeyEvent.Callback, Accessibility
      * {@link #OVERSCROLL_ALWAYS}, {@link #OVERSCROLL_IF_CONTENT_SCROLLS},
      * and {@link #OVERSCROLL_NEVER}.
      */
-    private int mOverscrollMode = OVERSCROLL_ALWAYS;
+    private int mOverscrollMode;
 
     /**
      * The parent this view is attached to.
@@ -1565,6 +1565,19 @@ public class View implements Drawable.Callback, KeyEvent.Callback, Accessibility
      * @see #getParent()
      */
     protected ViewParent mParent;
+
+    /**
+     * @hide
+     */
+    public static final int OVER_SCROLL_SETTING_EDGEGLOW = 1;
+    /**
+     * @hide
+     */
+    public static final int OVER_SCROLL_SETTING_BOUNCEGLOW = 2;
+    /**
+     * @hide
+     */
+    public static final int OVER_SCROLL_SETTING_BOUNCE = 3;
 
     /**
      * {@hide}
@@ -1850,6 +1863,8 @@ public class View implements Drawable.Callback, KeyEvent.Callback, Accessibility
         // Used for debug only
         //++sInstanceCount;
         mTouchSlop = ViewConfiguration.get(context).getScaledTouchSlop();
+
+        setOverscrollMode(OVERSCROLL_IF_CONTENT_SCROLLS);
     }
 
     /**
@@ -1915,6 +1930,7 @@ public class View implements Drawable.Callback, KeyEvent.Callback, Accessibility
 
         int scrollbarStyle = SCROLLBARS_INSIDE_OVERLAY;
 
+        int overScrollMode = mOverscrollMode;
         final int N = a.getIndexCount();
         for (int i = 0; i < N; i++) {
             int attr = a.getIndex(i);
@@ -2115,10 +2131,12 @@ public class View implements Drawable.Callback, KeyEvent.Callback, Accessibility
                     }
                     break;
                 case R.styleable.View_overscrollMode:
-                    mOverscrollMode = a.getInt(attr, OVERSCROLL_ALWAYS);
+                    overScrollMode = a.getInt(attr, OVERSCROLL_ALWAYS);
                     break;
             }
         }
+
+        setOverscrollMode(overScrollMode);
 
         if (background != null) {
             setBackgroundDrawable(background);
@@ -8844,14 +8862,16 @@ public class View implements Drawable.Callback, KeyEvent.Callback, Accessibility
      * @return This view's overscroll mode.
      */
     public int getOverscrollMode() {
-        /* User explicit disable */
-        if (Settings.System.getInt(mContext.getContentResolver(), 
-                    Settings.System.ALLOW_OVERSCROLL, 0) <= 0)
+        final int overScrollEffect = Settings.System.getInt(mContext.getContentResolver(),
+                Settings.System.OVERSCROLL_EFFECT, OVER_SCROLL_SETTING_EDGEGLOW);
+        if (overScrollEffect <= 0) {
+            /* Disabled */
             return OVERSCROLL_NEVER;
-        /* Don't overscroll items without scrollbars */
-        else if ((mViewFlags & SCROLLBARS_VERTICAL) == 0 && (mViewFlags & SCROLLBARS_HORIZONTAL) == 0)
+        } else if ( mOverscrollMode != OVERSCROLL_ALWAYS &&
+                    (mViewFlags & (SCROLLBARS_VERTICAL|SCROLLBARS_HORIZONTAL)) == 0) {
+            /* Don't overscroll items without scrollbars */
             return OVERSCROLL_NEVER;
-
+        }
         return mOverscrollMode;
     }
     

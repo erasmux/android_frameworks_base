@@ -2379,7 +2379,7 @@ public final class Settings {
          * Whether to allow overscrolling (edge bounce effect on lists)
          * @hide
          */
-        public static final String ALLOW_OVERSCROLL = "allow_overscroll";
+        public static final String OVERSCROLL_EFFECT = "overscroll_effect";
 
         /**
          * Sets the overscroller weight (edge bounce effect on lists)
