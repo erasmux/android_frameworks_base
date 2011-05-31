@@ -132,6 +132,7 @@ MessageList::value_type MessageQueue::waitMessage(nsecs_t timeout)
         if (again) {
             // the message has been processed. release our reference to it
             // without holding the lock.
+            result->notify();
             result = 0;
         }
         

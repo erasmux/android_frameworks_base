@@ -119,6 +119,7 @@ public:
         int                     getHeight() const;
 
         const DisplayHardware&  displayHardware() const;
+        DisplayHardware&        editDisplayHardware();
         const Transform&        transform() const;
         EGLDisplay              getEGLDisplay() const;
         
@@ -168,6 +169,8 @@ public:
     virtual status_t                    unfreezeDisplay(DisplayID dpy, uint32_t flags);
     virtual int                         setOrientation(DisplayID dpy, int orientation, uint32_t flags);
     virtual void                        signal() const;
+    virtual status_t                    turnElectronBeamOff(int32_t mode);
+    virtual status_t                    turnElectronBeamOn(int32_t mode);
 
             void                        screenReleased(DisplayID dpy);
             void                        screenAcquired(DisplayID dpy);
@@ -295,6 +298,12 @@ private:
             uint32_t    setTransactionFlags(uint32_t flags, nsecs_t delay = 0);
             void        commitTransaction();
 
+            status_t turnElectronBeamOffImplLocked(int32_t mode);
+            status_t turnElectronBeamOnImplLocked(int32_t mode);
+            status_t electronBeamOffAnimationImplLocked();
+            status_t electronBeamOnAnimationImplLocked();
+            status_t renderScreenToTextureLocked(DisplayID dpy,
+                    GLuint* textureName, GLfloat* uOut, GLfloat* vOut);
 
             friend class FreezeLock;
             sp<FreezeLock> getFreezeLock() const;
@@ -317,7 +326,11 @@ private:
 
     mutable     MessageQueue    mEventQueue;
     
-                
+    status_t postMessageAsync(const sp<MessageBase>& msg,
+            nsecs_t reltime=0, uint32_t flags = 0);
+
+    status_t postMessageSync(const sp<MessageBase>& msg,
+            nsecs_t reltime=0, uint32_t flags = 0);                
                 
                 // access must be protected by mStateLock
     mutable     Mutex                   mStateLock;
@@ -354,6 +367,7 @@ private:
                 bool                        mVisibleRegionsDirty;
                 bool                        mDeferReleaseConsole;
                 bool                        mFreezeDisplay;
+                int32_t                     mElectronBeamAnimationMode;
                 int32_t                     mFreezeCount;
                 nsecs_t                     mFreezeDisplayTime;
 

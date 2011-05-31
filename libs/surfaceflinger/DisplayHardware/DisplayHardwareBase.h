@@ -40,7 +40,10 @@ public:
     // console managment
     void releaseScreen() const;
     void acquireScreen() const;
+    bool isScreenAcquired() const;
+
     bool canDraw() const;
+    void setCanDraw(bool canDraw);
 
 private:
     class DisplayEventThreadBase : public Thread {
@@ -89,6 +92,7 @@ private:
 
     sp<DisplayEventThreadBase>  mDisplayEventThread;
     mutable int                 mCanDraw;
+    mutable int                 mScreenAcquired;
 };
 
 }; // namespace android

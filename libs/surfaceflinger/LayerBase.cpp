@@ -357,6 +357,12 @@ void LayerBase::draw(const Region& inClip) const
     */
 }
 
+void LayerBase::drawForSreenShot() const
+{
+    const DisplayHardware& hw(graphicPlane(0).displayHardware());
+    onDraw( Region(hw.bounds()) );
+}
+
 GLuint LayerBase::createTexture() const
 {
     GLuint textureName = -1;

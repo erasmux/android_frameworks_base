@@ -115,6 +115,24 @@ public:
         remote()->transact(BnSurfaceComposer::BOOT_FINISHED, data, &reply);
     }
 
+    virtual status_t turnElectronBeamOff(int32_t mode)
+    {
+        Parcel data, reply;
+        data.writeInterfaceToken(ISurfaceComposer::getInterfaceDescriptor());
+        data.writeInt32(mode);
+        remote()->transact(BnSurfaceComposer::TURN_ELECTRON_BEAM_OFF, data, &reply);
+        return reply.readInt32();
+    }
+
+    virtual status_t turnElectronBeamOn(int32_t mode)
+    {
+        Parcel data, reply;
+        data.writeInterfaceToken(ISurfaceComposer::getInterfaceDescriptor());
+        data.writeInt32(mode);
+        remote()->transact(BnSurfaceComposer::TURN_ELECTRON_BEAM_ON, data, &reply);
+        return reply.readInt32();
+    }
+
     virtual void signal() const
     {
         Parcel data, reply;
