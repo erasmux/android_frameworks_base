@@ -76,11 +76,6 @@ public:
         eOrientation270         = 3,
         eOrientationSwapMask    = 0x01
     };
-
-    enum {
-        eElectronBeamAnimationOn  = 0x01,
-        eElectronBeamAnimationOff = 0x10
-    };
     
     // flags for setOrientation
     enum {
@@ -112,9 +107,6 @@ public:
      */
     virtual void bootFinished() = 0;
 
-    virtual status_t turnElectronBeamOff(int32_t mode) = 0;
-    virtual status_t turnElectronBeamOn(int32_t mode) = 0;
-
     /* Signal surfaceflinger that there might be some work to do
      * This is an ASYNCHRONOUS call.
      */
@@ -137,9 +129,7 @@ public:
         SET_ORIENTATION,
         FREEZE_DISPLAY,
         UNFREEZE_DISPLAY,
-        SIGNAL,
-        TURN_ELECTRON_BEAM_OFF,
-        TURN_ELECTRON_BEAM_ON
+        SIGNAL
     };
 
     virtual status_t    onTransact( uint32_t code,

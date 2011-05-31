@@ -359,7 +359,7 @@ status_t DisplayHardwareBase::ConsoleManagerThread::initCheck() const
 
 DisplayHardwareBase::DisplayHardwareBase(const sp<SurfaceFlinger>& flinger,
         uint32_t displayIndex) 
-    : mCanDraw(true), mScreenAcquired(true)
+    : mCanDraw(true)
 {
     mDisplayEventThread = new DisplayEventThread(flinger);
     if (mDisplayEventThread->initCheck() != NO_ERROR) {
@@ -374,14 +374,10 @@ DisplayHardwareBase::~DisplayHardwareBase()
     mDisplayEventThread->requestExitAndWait();
 }
 
-void DisplayHardwareBase::setCanDraw(bool canDraw)
-{
-    mCanDraw = canDraw;
-}
 
 bool DisplayHardwareBase::canDraw() const
 {
-    return mCanDraw && mScreenAcquired;
+    return mCanDraw;
 }
 
 void DisplayHardwareBase::releaseScreen() const
@@ -389,7 +385,7 @@ void DisplayHardwareBase::releaseScreen() const
     status_t err = mDisplayEventThread->releaseScreen();
     if (err >= 0) {
         //LOGD("screen given-up");
-        mScreenAcquired = false;
+        mCanDraw = false;
     }
 }
 
@@ -398,13 +394,8 @@ void DisplayHardwareBase::acquireScreen() const
     status_t err = mDisplayEventThread->acquireScreen();
     if (err >= 0) {
         //LOGD("screen returned");
-        mScreenAcquired = true;
+        mCanDraw = true;
     }
-}
-
-bool DisplayHardwareBase::isScreenAcquired() const
-{
-    return mScreenAcquired;
 }
 
 }; // namespace android

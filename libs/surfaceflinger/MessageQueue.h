@@ -25,7 +25,6 @@
 #include <utils/Timers.h>
 #include <utils/List.h>
 
-#include "Barrier.h"
 
 namespace android {
 
@@ -64,16 +63,8 @@ public:
     
     // return true if message has a handler
     virtual bool handler() { return false; }
-
-    // waits for the handler to be processed
-    void wait() const { barrier.wait(); }
-    
-    // releases all waiters. this is done automatically if
-    // handler returns true
-    void notify() const { barrier.open(); }
     
 protected:
-    mutable Barrier barrier;
     virtual ~MessageBase() { }
 
 private:
