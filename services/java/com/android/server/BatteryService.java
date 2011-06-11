@@ -442,14 +442,24 @@ class BatteryService extends Binder {
     }
 
     private final int getIcon(int level) {
+        boolean cm7icons =
+            Settings.System.getInt(mContext.getContentResolver(),
+                                   Settings.System.BATTERY_PERCENTAGE_STATUS_ICON, 0) == 0;
+
         if (mBatteryStatus == BatteryManager.BATTERY_STATUS_CHARGING) {
-            return com.android.internal.R.drawable.stat_sys_battery_charge;
+            return cm7icons ?
+                com.android.internal.R.drawable.stat_sys_battery_charge_cm7 :
+                com.android.internal.R.drawable.stat_sys_battery_charge;
         } else if (mBatteryStatus == BatteryManager.BATTERY_STATUS_DISCHARGING ||
                 mBatteryStatus == BatteryManager.BATTERY_STATUS_NOT_CHARGING ||
                 mBatteryStatus == BatteryManager.BATTERY_STATUS_FULL) {
-            return com.android.internal.R.drawable.stat_sys_battery;
+            return cm7icons ?
+                com.android.internal.R.drawable.stat_sys_battery_cm7 :
+                com.android.internal.R.drawable.stat_sys_battery;
         } else {
-            return com.android.internal.R.drawable.stat_sys_battery_unknown;
+            return cm7icons ?
+                com.android.internal.R.drawable.stat_sys_battery :
+                com.android.internal.R.drawable.stat_sys_battery_unknown;
         }
     }
 

@@ -458,11 +458,15 @@ public class StatusBarPolicy {
                 new com.android.server.status.StorageNotification(context));
 
         // battery
+        boolean cm7icons =
+            Settings.System.getInt(mContext.getContentResolver(),
+                                   Settings.System.BATTERY_PERCENTAGE_STATUS_ICON, 0) == 0;
         mBatteryData = IconData.makeIconNumber("battery",
-                null, com.android.internal.R.drawable.stat_sys_battery_unknown, 0, 0,
-                Settings.System.BATTERY_PERCENTAGE_STATUS_COLOR);
-	mBatteryData.textColor = Settings.System.getInt(mContext.getContentResolver(),
-							Settings.System.BATTERY_PERCENTAGE_STATUS_COLOR, 0xff000000);
+                null, cm7icons ? com.android.internal.R.drawable.stat_sys_battery_unknown_cm7
+                               : com.android.internal.R.drawable.stat_sys_battery_unknown,
+                0, 0, Settings.System.BATTERY_PERCENTAGE_STATUS_COLOR);
+        mBatteryData.textColor = Settings.System.getInt(mContext.getContentResolver(),
+                                                        Settings.System.BATTERY_PERCENTAGE_STATUS_COLOR, 0xff000000);
         mBatteryIcon = service.addIcon(mBatteryData, null);
 
         ContentObserver coBattery = new ContentObserver(null) {
@@ -757,7 +761,7 @@ public class StatusBarPolicy {
         //show battery percentage if not plugged in and status is enabled
         if (plugged || level >= 100 ||
                 Settings.System.getInt(mContext.getContentResolver(),
-                Settings.System.BATTERY_PERCENTAGE_STATUS_ICON, 1) == 0) {
+                Settings.System.BATTERY_PERCENTAGE_STATUS_ICON, 0) == 0) {
             mBatteryData.number = -1;
         } else {
             mBatteryData.number = level;
