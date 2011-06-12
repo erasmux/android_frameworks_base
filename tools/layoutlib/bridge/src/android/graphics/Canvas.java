@@ -29,6 +29,7 @@ import android.graphics.Paint.Align;
 import android.graphics.Paint.FontInfo;
 import android.graphics.Paint.Style;
 import android.graphics.Region.Op;
+import android.text.TextUtils;
 
 import java.awt.AlphaComposite;
 import java.awt.BasicStroke;
@@ -682,7 +683,7 @@ public class Canvas extends _Original_Canvas {
                 int lastIndex = index + count;
                 char[] bidiText;
                 if (bidi) {
-                    bidiText=bidiProcess(text,index,count);
+                    bidiText=TextUtils.processBidi(text,index,count);
                     i=0;
                     lastIndex=count;
                 } else {
@@ -1156,7 +1157,7 @@ public class Canvas extends _Original_Canvas {
         // TODO Auto-generated method stub
         int i = 0;
         char[] bidiText;
-        bidiText=bidiProcess(text,index,count);
+        bidiText=TextUtils.processBidi(text,index,count);
         super.drawTextOnPath(bidiText, i, count, path, offset, offset2, paint);
     }
 
@@ -1168,7 +1169,7 @@ public class Canvas extends _Original_Canvas {
         // TODO Auto-generated method stub
         int i = 0;
         String bidiText;
-        bidiText=new String(bidiProcess(text.toCharArray(),0,text.length()));
+        bidiText=new String(TextUtils.processBidi(text.toCharArray(),0,text.length()));
         super.drawTextOnPath(bidiText, path, offset, offset2, paint);
     }
 
