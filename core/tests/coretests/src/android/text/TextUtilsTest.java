@@ -17,6 +17,7 @@
 package android.text;
 
 import android.graphics.Paint;
+import android.os.Parcel;
 import android.test.suitebuilder.annotation.LargeTest;
 import android.test.suitebuilder.annotation.SmallTest;
 import android.text.Spannable;
@@ -327,6 +328,71 @@ public class TextUtilsTest extends TestCase {
                 assertTrue("wid " + i + " pass " + j, p.measureText(keep1) == p.measureText(out1));
             }
         }
+    }
+
+    @SmallTest
+    public void testDelimitedStringContains() {
+        assertFalse(TextUtils.delimitedStringContains("", ',', null));
+        assertFalse(TextUtils.delimitedStringContains(null, ',', ""));
+        // Whole match
+        assertTrue(TextUtils.delimitedStringContains("gps", ',', "gps"));
+        // At beginning.
+        assertTrue(TextUtils.delimitedStringContains("gps,gpsx,network,mock", ',', "gps"));
+        assertTrue(TextUtils.delimitedStringContains("gps,network,mock", ',', "gps"));
+        // In middle, both without, before & after a false match.
+        assertTrue(TextUtils.delimitedStringContains("network,gps,mock", ',', "gps"));
+        assertTrue(TextUtils.delimitedStringContains("network,gps,gpsx,mock", ',', "gps"));
+        assertTrue(TextUtils.delimitedStringContains("network,gpsx,gps,mock", ',', "gps"));
+        // At the end.
+        assertTrue(TextUtils.delimitedStringContains("network,mock,gps", ',', "gps"));
+        assertTrue(TextUtils.delimitedStringContains("network,mock,gpsx,gps", ',', "gps"));
+        // Not present (but with a false match)
+        assertFalse(TextUtils.delimitedStringContains("network,mock,gpsx", ',', "gps"));
+    }
+
+    @SmallTest
+    public void testCharSequenceCreator() {
+        Parcel p = Parcel.obtain();
+        TextUtils.writeToParcel(null, p, 0);
+        CharSequence text = TextUtils.CHAR_SEQUENCE_CREATOR.createFromParcel(p);
+        assertNull("null CharSequence should generate null from parcel", text);
+        p = Parcel.obtain();
+        TextUtils.writeToParcel("test", p, 0);
+        text = TextUtils.CHAR_SEQUENCE_CREATOR.createFromParcel(p);
+        assertEquals("conversion to/from parcel failed", "test", text);
+    }
+
+    @SmallTest
+    public void testCharSequenceCreatorNull() {
+        Parcel p;
+        CharSequence text;
+        p = Parcel.obtain();
+        TextUtils.writeToParcel(null, p, 0);
+        p.setDataPosition(0);
+        text = TextUtils.CHAR_SEQUENCE_CREATOR.createFromParcel(p);
+        assertNull("null CharSequence should generate null from parcel", text);
+    }
+
+    @SmallTest
+    public void testCharSequenceCreatorSpannable() {
+        Parcel p;
+        CharSequence text;
+        p = Parcel.obtain();
+        TextUtils.writeToParcel(new SpannableString("test"), p, 0);
+        p.setDataPosition(0);
+        text = TextUtils.CHAR_SEQUENCE_CREATOR.createFromParcel(p);
+        assertEquals("conversion to/from parcel failed", "test", text.toString());
+    }
+
+    @SmallTest
+    public void testCharSequenceCreatorString() {
+        Parcel p;
+        CharSequence text;
+        p = Parcel.obtain();
+        TextUtils.writeToParcel("test", p, 0);
+        p.setDataPosition(0);
+        text = TextUtils.CHAR_SEQUENCE_CREATOR.createFromParcel(p);
+        assertEquals("conversion to/from parcel failed", "test", text.toString());
     }
 
     /**
