@@ -355,6 +355,9 @@
     <!-- status message in phone options dialog for when airplane mode is off -->
     <string name="global_actions_airplane_mode_off_status">Airplane mode is OFF</string>
 
+    <!-- label for item that screenshots in phone options dialog -->
+    <string name="global_action_screenshot">Screenshot</string>
+
     <!-- Displayed to the user to tell them that they have started up the phone in "safe mode" -->
     <string name="safeMode">Safe mode</string>
 
@@ -467,6 +470,13 @@
       your messages or delete them without showing them to you.</string>
 
     <!-- Title of an application permission, listed so the user can choose whether they want to allow the application to do this. -->
+    <string name="permlab_receiveEmergencyBroadcast">receive emergency broadcasts</string>
+    <!-- Description of an application permission, listed so the user can choose whether they want to allow the application to do this. -->
+    <string name="permdesc_receiveEmergencyBroadcast">Allows application to receive
+      and process emergency broadcast messages. This permission is only available
+      to system applications.</string>
+
+     <!-- Title of an application permission, listed so the user can choose whether they want to allow the application to do this. -->
     <string name="permlab_sendSms">send SMS messages</string>
     <!-- Description of an application permission, listed so the user can choose whether they want to allow the application to do this. -->
     <string name="permdesc_sendSms">Allows application to send SMS
@@ -752,6 +762,11 @@
         system\'s various log files.  This allows it to discover general
         information about what you are doing with the phone, potentially
         including personal or private information.</string>
+
+    <!-- Title of an application permission, listed so the user can choose whether they want to allow the application to do this. -->
+    <string name="permlab_preventpower">prevent power key</string>
+    <!-- Description of an application permission, listed so the user can choose whether they want to allow the application to do this. -->
+    <string name="permdesc_preventpower">Allows an application to override the power key</string>
 
     <!-- Title of an application permission, listed so the user can choose whether they want to allow the application to do this. -->
     <string name="permlab_diagnostic">read/write to resources owned by diag</string>
@@ -1627,8 +1642,6 @@
 
     <!-- Displayed on lock screen's extra left tab - phone -->
     <string name="lockscreen_phone_label">Phone</string>
-    <!-- Displayed on lock screen's extra right tab - messaging -->
-    <string name="lockscreen_messaging_label">Messaging</string>
 
     <!-- Password keyboard strings. Used by LockScreen and Settings --><skip />
     <!-- Label for "switch to symbols" key.  Must be short to fit on key! -->

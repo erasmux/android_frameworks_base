@@ -57,6 +57,8 @@ import android.content.pm.PackageInfo;
 import android.content.pm.PackageInfoLite;
 import android.content.pm.PackageManager;
 import android.content.pm.PackageStats;
+import android.content.pm.ParceledListSlice;
+
 import static android.content.pm.PackageManager.COMPONENT_ENABLED_STATE_DEFAULT;
 import static android.content.pm.PackageManager.COMPONENT_ENABLED_STATE_DISABLED;
 import static android.content.pm.PackageManager.COMPONENT_ENABLED_STATE_ENABLED;
@@ -78,6 +80,7 @@ import android.os.IBinder;
 import android.os.Looper;
 import android.os.Message;
 import android.os.Parcel;
+import android.os.Parcelable;
 import android.os.RemoteException;
 import android.os.Environment;
 import android.os.FileObserver;
@@ -2375,40 +2378,79 @@ class PackageManagerService extends IPackageManager.Stub {
         }
     }
 
-    public List<PackageInfo> getInstalledPackages(int flags) {
-        ArrayList<PackageInfo> finalList = new ArrayList<PackageInfo>();
-
-        synchronized (mPackages) {
-            if((flags & PackageManager.GET_UNINSTALLED_PACKAGES) != 0) {
-                Iterator<PackageSetting> i = mSettings.mPackages.values().iterator();
-                while (i.hasNext()) {
-                    final PackageSetting ps = i.next();
-                    PackageInfo psPkg = generatePackageInfoFromSettingsLP(ps.name, flags);
-                    if(psPkg != null) {
-                        finalList.add(psPkg);
-                    }
-                }
-            }
-            else {
-                Iterator<PackageParser.Package> i = mPackages.values().iterator();
-                while (i.hasNext()) {
-                    final PackageParser.Package p = i.next();
-                    if (p.applicationInfo != null) {
-                        PackageInfo pi = generatePackageInfo(p, flags);
-                        if(pi != null) {
-                            finalList.add(pi);
-                        }
-                    }
-                }
+    private static final int getContinuationPoint(final String[] keys, final String key) {
+        final int index;
+        if (key == null) {
+            index = 0;
+        } else {
+            final int insertPoint = Arrays.binarySearch(keys, key);
+            if (insertPoint < 0) {
+                index = -insertPoint;
+            } else {
+                index = insertPoint + 1;
             }
         }
-        return finalList;
+        return index;
+    }
+
+    public ParceledListSlice<PackageInfo> getInstalledPackages(int flags, String lastRead) {
+        final ParceledListSlice<PackageInfo> list = new ParceledListSlice<PackageInfo>();
+        final boolean listUninstalled = (flags & PackageManager.GET_UNINSTALLED_PACKAGES) != 0;
+        final String[] keys;
+
+        synchronized (mPackages) {
+            if (listUninstalled) {
+                keys = mSettings.mPackages.keySet().toArray(new String[mSettings.mPackages.size()]);
+            } else {
+                keys = mPackages.keySet().toArray(new String[mPackages.size()]);
+            }
+
+            Arrays.sort(keys);
+            int i = getContinuationPoint(keys, lastRead);
+            final int N = keys.length;
+
+            while (i < N) {
+                final String packageName = keys[i++];
+
+                PackageInfo pi = null;
+                if (listUninstalled) {
+                    final PackageSetting ps = mSettings.mPackages.get(packageName);
+                    if (ps != null) {
+                        pi = generatePackageInfoFromSettingsLP(ps.name, flags);
+                    }
+                } else {
+                    final PackageParser.Package p = mPackages.get(packageName);
+                    if (p != null) {
+                        pi = generatePackageInfo(p, flags);
+                    }
+                }
+
+                if (pi != null && !list.append(pi)) {
+                    break;
+                }
+            }
+
+            if (i == N) {
+                list.setLastSlice(true);
+            }
+        }
+
+        return list;
     }
 
     public List<PackageInfo> getInstalledThemePackages() {
         // Returns a list of theme APKs.
         ArrayList<PackageInfo> finalList = new ArrayList<PackageInfo>();
-        List<PackageInfo> installedPackagesList = getInstalledPackages(0);
+        List<PackageInfo> installedPackagesList = new ArrayList<PackageInfo>();
+        PackageInfo lastItem = null;
+        ParceledListSlice<PackageInfo> slice;
+
+        do {
+            final String lastKey = lastItem != null ? lastItem.packageName : null;
+            slice = getInstalledPackages(0, lastKey);
+            lastItem = slice.populateList(installedPackagesList, PackageInfo.CREATOR);
+        } while (!slice.isLastSlice());
+
         Iterator<PackageInfo> i = installedPackagesList.iterator();
         while (i.hasNext()) {
             final PackageInfo pi = i.next();
@@ -2419,33 +2461,50 @@ class PackageManagerService extends IPackageManager.Stub {
         return finalList;
     }
 
-    public List<ApplicationInfo> getInstalledApplications(int flags) {
-        ArrayList<ApplicationInfo> finalList = new ArrayList<ApplicationInfo>();
-        synchronized(mPackages) {
-            if((flags & PackageManager.GET_UNINSTALLED_PACKAGES) != 0) {
-                Iterator<PackageSetting> i = mSettings.mPackages.values().iterator();
-                while (i.hasNext()) {
-                    final PackageSetting ps = i.next();
-                    ApplicationInfo ai = generateApplicationInfoFromSettingsLP(ps.name, flags);
-                    if(ai != null) {
-                        finalList.add(ai);
+    public ParceledListSlice<ApplicationInfo> getInstalledApplications(int flags,
+            String lastRead) {
+        final ParceledListSlice<ApplicationInfo> list = new ParceledListSlice<ApplicationInfo>();
+        final boolean listUninstalled = (flags & PackageManager.GET_UNINSTALLED_PACKAGES) != 0;
+        final String[] keys;
+
+        synchronized (mPackages) {
+            if (listUninstalled) {
+                keys = mSettings.mPackages.keySet().toArray(new String[mSettings.mPackages.size()]);
+            } else {
+                keys = mPackages.keySet().toArray(new String[mPackages.size()]);
+            }
+
+            Arrays.sort(keys);
+            int i = getContinuationPoint(keys, lastRead);
+            final int N = keys.length;
+
+            while (i < N) {
+                final String packageName = keys[i++];
+
+                ApplicationInfo ai = null;
+                if (listUninstalled) {
+                    final PackageSetting ps = mSettings.mPackages.get(packageName);
+                    if (ps != null) {
+                        ai = generateApplicationInfoFromSettingsLP(ps.name, flags);
                     }
+                } else {
+                    final PackageParser.Package p = mPackages.get(packageName);
+                    if (p != null) {
+                        ai = PackageParser.generateApplicationInfo(p, flags);
+                    }
+                }
+
+                if (ai != null && !list.append(ai)) {
+                    break;
                 }
             }
-            else {
-                Iterator<PackageParser.Package> i = mPackages.values().iterator();
-                while (i.hasNext()) {
-                    final PackageParser.Package p = i.next();
-                    if (p.applicationInfo != null) {
-                        ApplicationInfo ai = PackageParser.generateApplicationInfo(p, flags);
-                        if(ai != null) {
-                            finalList.add(ai);
-                        }
-                    }
-                }
+
+            if (i == N) {
+                list.setLastSlice(true);
             }
         }
-        return finalList;
+
+        return list;
     }
 
     public List<ApplicationInfo> getPersistentApplications(int flags) {
@@ -3159,7 +3218,7 @@ class PackageManagerService extends IPackageManager.Stub {
             // that conflict with existing packages.  Only do this if the
             // package isn't already installed, since we don't want to break
             // things that are installed.
-            if ((scanMode&SCAN_NEW_INSTALL) != 0) {
+            if ((scanMode & SCAN_NEW_INSTALL) != 0) {
                 int N = pkg.providers.size();
                 int i;
                 for (i=0; i<N; i++) {
@@ -3202,7 +3261,7 @@ class PackageManagerService extends IPackageManager.Stub {
         }
         
         final long scanFileTime = scanFile.lastModified();
-        final boolean forceDex = (scanMode&SCAN_FORCE_DEX) != 0;
+        final boolean forceDex = (scanMode & SCAN_FORCE_DEX) != 0;
         final boolean scanFileNewer = forceDex || scanFileTime != pkgSetting.timeStamp;
         pkg.applicationInfo.processName = fixProcessName(
                 pkg.applicationInfo.packageName,
@@ -3359,6 +3418,13 @@ class PackageManagerService extends IPackageManager.Stub {
                     if (NativeLibraryHelper.removeNativeBinariesFromDirLI(nativeLibraryDir)) {
                         Log.i(TAG, "removed obsolete native libraries for system package " + path);
                     }
+                    pkg.mScanPath = path;
+                    if ((scanMode & SCAN_NO_DEX) == 0) {
+                        if (performDexOptLI(pkg, forceDex) == DEX_OPT_FAILED) {
+                            mLastScanError = PackageManager.INSTALL_FAILED_DEXOPT;
+                            return null;
+                        }
+                    }
                 } else if (nativeLibraryDir.getParent().equals(dataPathString)) {
                     /*
                      * If this is an internal application or our
@@ -3368,9 +3434,23 @@ class PackageManagerService extends IPackageManager.Stub {
                      * can happen for older apps that existed before an OTA to
                      * Gingerbread.
                      */
-                    Slog.i(TAG, "Unpacking native libraries for " + path);
-                    mInstaller.unlinkNativeLibraryDirectory(dataPathString);
-                    NativeLibraryHelper.copyNativeBinariesLI(scanFile, nativeLibraryDir);
+                    pkg.mScanPath = path;
+                    if ((scanMode & SCAN_NO_DEX) == 0) {
+                        int DexStatus = performDexOptLI(pkg, forceDex);
+                        if (DexStatus == DEX_OPT_FAILED) {
+                            mLastScanError = PackageManager.INSTALL_FAILED_DEXOPT;
+                            return null;
+                        }
+                        if (DexStatus == DEX_OPT_PERFORMED) {
+
+                            // Only attempt to unpack native libraries if dexopt was performed
+                            // TODO, fix this also for Odex
+
+                            Slog.i(TAG, "Unpacking native libraries for " + path);
+                            mInstaller.unlinkNativeLibraryDirectory(dataPathString);
+                            NativeLibraryHelper.copyNativeBinariesLI(scanFile, nativeLibraryDir);
+                        }
+                    }
                 } else {
                     Slog.i(TAG, "Linking native library dir for " + path);
                     mInstaller.linkNativeLibraryDirectory(dataPathString,
@@ -3379,7 +3459,7 @@ class PackageManagerService extends IPackageManager.Stub {
             }
             pkg.mScanPath = path;
 
-            if ((scanMode&SCAN_NO_DEX) == 0) {
+            if ((scanMode & SCAN_NO_DEX) == 0) {
                 if (performDexOptLI(pkg, forceDex) == DEX_OPT_FAILED) {
                     mLastScanError = PackageManager.INSTALL_FAILED_DEXOPT;
                     return null;
@@ -3402,7 +3482,7 @@ class PackageManagerService extends IPackageManager.Stub {
 
         synchronized (mPackages) {
             // We don't expect installation to fail beyond this point,
-            if ((scanMode&SCAN_MONITOR) != 0) {
+            if ((scanMode & SCAN_MONITOR) != 0) {
                 mAppDirs.put(pkg.mPath, pkg);
             }
             // Add the new setting to mSettings
@@ -3416,7 +3496,7 @@ class PackageManagerService extends IPackageManager.Stub {
             if (currentTime != 0) {
                 if (pkgSetting.firstInstallTime == 0) {
                     pkgSetting.firstInstallTime = pkgSetting.lastUpdateTime = currentTime;
-                } else if ((scanMode&SCAN_UPDATE_TIME) != 0) {
+                } else if ((scanMode & SCAN_UPDATE_TIME) != 0) {
                     pkgSetting.lastUpdateTime = currentTime;
                 }
             } else if (pkgSetting.firstInstallTime == 0) {

@@ -1029,7 +1029,12 @@ public class CDMAPhone extends PhoneBase {
                 }
                 String[] respId = (String[])ar.result;
                 mEsn  =  respId[2];
-                mMeid =  respId[3];
+                // Samsung CDMA devices' MEID is not found in this parcel
+                // instead, extract it from system properties
+                if (SystemProperties.get("ro.ril.samsung_cdma").equals("true"))
+                    mMeid = SystemProperties.get("ro.ril.MEID");
+                else
+                    mMeid =  respId[3];
             }
             break;
 
@@ -1162,7 +1167,8 @@ public class CDMAPhone extends PhoneBase {
      * @param response Callback message is empty on completion
      */
     public void activateCellBroadcastSms(int activate, Message response) {
-        mSMS.activateCellBroadcastSms(activate, response);
+        Log.e(LOG_TAG, "[CDMAPhone] activateCellBroadcastSms() is obsolete; use SmsManager");
+        response.sendToTarget();
     }
 
     /**
@@ -1171,7 +1177,8 @@ public class CDMAPhone extends PhoneBase {
      * @param response Callback message is empty on completion
      */
     public void getCellBroadcastSmsConfig(Message response) {
-        mSMS.getCellBroadcastSmsConfig(response);
+        Log.e(LOG_TAG, "[CDMAPhone] getCellBroadcastSmsConfig() is obsolete; use SmsManager");
+        response.sendToTarget();
     }
 
     /**
@@ -1180,7 +1187,8 @@ public class CDMAPhone extends PhoneBase {
      * @param response Callback message is empty on completion
      */
     public void setCellBroadcastSmsConfig(int[] configValuesArray, Message response) {
-        mSMS.setCellBroadcastConfig(configValuesArray, response);
+        Log.e(LOG_TAG, "[CDMAPhone] setCellBroadcastSmsConfig() is obsolete; use SmsManager");
+        response.sendToTarget();
     }
 
     private static final String IS683A_FEATURE_CODE = "*228";

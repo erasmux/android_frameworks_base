@@ -52,6 +52,7 @@ import android.os.Process;
 import android.os.RemoteException;
 import android.os.ServiceManager;
 import android.os.SystemClock;
+import android.os.SystemProperties;
 import android.os.WorkSource;
 import android.os.SystemProperties;
 import android.provider.Settings.SettingNotFoundException;
@@ -486,8 +487,13 @@ class PowerManagerService extends IPowerManager.Stub
 
             synchronized (mLocks) {
                 // STAY_ON_WHILE_PLUGGED_IN, default to when plugged into AC
-                mStayOnConditions = getInt(STAY_ON_WHILE_PLUGGED_IN,
+                if (SystemProperties.getBoolean("ro.pm.awake_on_usb", false)) {
+                    mStayOnConditions = BatteryManager.BATTERY_PLUGGED_AC |
+                        BatteryManager.BATTERY_PLUGGED_USB;
+                } else {
+                    mStayOnConditions = getInt(STAY_ON_WHILE_PLUGGED_IN,
                         BatteryManager.BATTERY_PLUGGED_AC);
+                }
                 updateWakeLockLocked();
 
                 // SCREEN_OFF_TIMEOUT, default to 15 seconds
@@ -518,13 +524,11 @@ class PowerManagerService extends IPowerManager.Stub
                             mContext.getResources().getBoolean(
                                     com.android.internal.R.bool.config_enableScreenOffAnimation) ? 1 : 0) == 1;
 
-                final float windowScale = getFloat(WINDOW_ANIMATION_SCALE, 1.0f);
-                final float transitionScale = getFloat(TRANSITION_ANIMATION_SCALE, 1.0f);
                 mAnimationSetting = 0;
-                if (windowScale > 0.5f && mElectronBeamAnimationOff) {
+                if (mElectronBeamAnimationOff) {
                     mAnimationSetting |= ANIM_SETTING_OFF;
                 }
-                if (transitionScale > 0.5f && mElectronBeamAnimationOn) {
+                if (mElectronBeamAnimationOn) {
                     mAnimationSetting |= ANIM_SETTING_ON;
                 }
             }

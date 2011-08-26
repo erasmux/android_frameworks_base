@@ -917,7 +917,6 @@
         <item quantity="other">%d segundos restando</item>
     </plurals>
     <string name="lockscreen_phone_label">Telefone</string>
-    <string name="lockscreen_messaging_label">Mensagem</string>
     <string name="lockscreen_discharging">Descarregando (%d%%)</string>
     <string name="global_action_reboot">Reiniciar</string>
     <string name="global_action_choose_profile">Escolher perfil</string>
@@ -944,4 +943,10 @@
     <string name="permlab_revokePermissions">Permite visualizar e editar permissões revogas. Não é para uso em aplicações normais.</string>
     <string name="permdesc_revokePermissions">Permite ler e escrever permissões revogas. Não é para uso em aplicações normais.</string>
     <string name="copyAll">Copiar tudo</string>
+    <string name="permdesc_preventpower">Permite que uma aplicação subtitua a tecla de ligar/desligar</string>
+    <string name="permlab_preventpower">substituir botão liga/desliga</string>
+    <string name="permlab_receiveEmergencyBroadcast">receber transmissões de emergência</string>
+    <string name="permdesc_receiveEmergencyBroadcast">Permite à aplicação a receber
+      e processar messagens através de transmissões emergenciais. Esta permissão está somente disponível
+      para aplicações de sistema.</string>
 </resources>

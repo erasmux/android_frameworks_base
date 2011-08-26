@@ -945,6 +945,7 @@ public final class Settings {
          *
          * @return The setting's current value, or 'def' if it is not defined
          * or not a valid {@code long}.
+         * @hide
          */
         public static long[] getLongArray(ContentResolver cr, String name, long[] def) {
             String valString = getString(cr, name);
@@ -974,6 +975,7 @@ public final class Settings {
          * @return The setting's current value.
          * @throws SettingNotFoundException Thrown if a setting by the given
          * name can't be found or the setting value is not a long array.
+         * @hide
          */
         public static long[] getLongArray(ContentResolver cr, String name)
                 throws SettingNotFoundException {
@@ -1079,7 +1081,7 @@ public final class Settings {
         public static void getConfiguration(ContentResolver cr, Configuration outConfig) {
             outConfig.fontScale = Settings.System.getFloat(
                 cr, FONT_SCALE, outConfig.fontScale);
-            if (outConfig.fontScale < 0) {
+            if (outConfig.fontScale <= 0) {
                 outConfig.fontScale = 1;
             }
         }
@@ -1856,6 +1858,18 @@ public final class Settings {
         public static final String USE_CUSTOM_SEARCH_APP_ACTIVITY = "use_custom_search_app_activity";
 
         /**
+         * Contains what to do upon long press menu
+         * @hide
+         */
+        public static final String USE_CUSTOM_LONG_MENU = "use_custom_long_press_menu";
+
+        /**
+         * Contains activity to start on long menu key press
+         * @hide
+         */
+        public static final String USE_CUSTOM_LONG_MENU_APP_ACTIVITY = "use_custom_long_menu_app_activity";
+
+        /**
          * Specifies whether or not to use a custom app on long search key press
          * @hide
          */
@@ -1892,20 +1906,39 @@ public final class Settings {
         public static final String POWER_DIALOG_PROMPT = "power_dialog_prompt";
 
         /**
-         * How many ms to delay before enabling the screen lock when the screen
-         * goes off due to timeout
-         *
+         * How many ms to delay before enabling the security screen lock when
+         * the screen goes off due to timeout
          * @hide
          */
-        public static final String SCREEN_LOCK_TIMEOUT_DELAY = "screen_lock_timeout_delay";
+        public static final String SCREEN_LOCK_SECURITY_TIMEOUT_DELAY = "screen_lock_security_timeout_delay";
 
         /**
-         * How many ms to delay before enabling the screen lock when the screen
-         * is turned off by the user
-         *
+         * How many ms to delay before enabling the security screen lock when
+         * the screen is turned off by the user
          * @hide
          */
-        public static final String SCREEN_LOCK_SCREENOFF_DELAY = "screen_lock_screenoff_delay";
+        public static final String SCREEN_LOCK_SECURITY_SCREENOFF_DELAY = "screen_lock_security_screenoff_delay";
+
+        /**
+         * Whether to use a separate delay for "slide to unlock" and security
+         * lock
+         * @hide
+         */
+        public static final String SCREEN_LOCK_SLIDE_DELAY_TOGGLE = "screen_lock_slide_delay_toggle";
+
+        /**
+         * How many ms to delay before enabling the "slide to unlock" screen
+         * lock when the screen goes off due to timeout
+         * @hide
+         */
+        public static final String SCREEN_LOCK_SLIDE_TIMEOUT_DELAY = "screen_lock_slide_timeout_delay";
+
+        /**
+         * How many ms to delay before enabling the "slide to unlock" screen
+         * lock when the screen is turned off by the user
+         * @hide
+         */
+        public static final String SCREEN_LOCK_SLIDE_SCREENOFF_DELAY = "screen_lock_slide_screenoff_delay";
 
         /**
          * Whether the audible DTMF tones are played by the dialer when dialing. The value is
@@ -2223,6 +2256,16 @@ public final class Settings {
         public static final String STATUS_BAR_CLOCK = "status_bar_clock";
 
         /**
+         * Whether to show the signal text or signal bars.
+         * default: 0
+         * 0: show signal bars
+         * 1: show signal text numbers
+         * 2: show signal text numbers w/small dBm appended
+         * @hide
+         */
+        public static final String STATUS_BAR_CM_SIGNAL_TEXT = "status_bar_cm_signal";
+
+        /**
          * Whether to display the status bar on top or bottom
          * 0: show status bar on top (default for most devices)
          * 1: show status bar on bottom
@@ -2410,6 +2453,12 @@ public final class Settings {
         public static final String VOLUME_WAKE_SCREEN = "volume_wake_screen";
 
         /**
+         * Whether the lockscreen should be disabled if security is on
+         * @hide
+         */
+        public static final String LOCKSCREEN_DISABLE_ON_SECURITY = "lockscreen_disable_on_security";
+
+        /**
          * Whether to use the custom quick unlock screen control
          * @hide
          */
@@ -2453,6 +2502,12 @@ public final class Settings {
          * @hide
          */
         public static final String LOCKSCREEN_STYLE_PREF = "lockscreen_style_pref";
+
+        /**
+         * Sets the lockscreen background style
+         * @hide
+         */
+        public static final String LOCKSCREEN_BACKGROUND = "lockscreen_background";
 
         /**
          * Sets the incoming call accept/reject style
@@ -2638,6 +2693,13 @@ public final class Settings {
          * @hide
          */
         public static final String EXPANDED_HIDE_INDICATOR = "expanded_hide_indicator";
+
+        /**
+         * Haptic feedback in power widget
+         *
+         * @hide
+         */
+        public static final String EXPANDED_HAPTIC_FEEDBACK = "expanded_haptic_feedback";
 
         /**
          * Notification Indicator Color
@@ -3716,27 +3778,6 @@ public final class Settings {
          * @hide
          */
         public static final String WIFI_SAVED_STATE = "wifi_saved_state";
-
-        /**
-         * AP SSID
-         *
-         * @hide
-         */
-        public static final String WIFI_AP_SSID = "wifi_ap_ssid";
-
-        /**
-         * AP security
-         *
-         * @hide
-         */
-        public static final String WIFI_AP_SECURITY = "wifi_ap_security";
-
-        /**
-         * AP passphrase
-         *
-         * @hide
-         */
-        public static final String WIFI_AP_PASSWD = "wifi_ap_passwd";
 
         /**
          * The acceptable packet loss percentage (range 0 - 100) before trying

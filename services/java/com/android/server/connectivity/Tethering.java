@@ -52,6 +52,7 @@ import com.android.internal.util.HierarchicalStateMachine;
 
 import java.io.File;
 import java.io.FileDescriptor;
+import java.io.FileInputStream;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -223,6 +224,11 @@ public class Tethering extends INetworkManagementEventObserver.Stub {
         return false;
     }
 
+    public boolean isBTPan(String iface) {
+        if (iface.matches("bnep\\d")) return true;
+        return false;
+    }
+
     public void interfaceAdded(String iface) {
         IBinder b = ServiceManager.getService(Context.NETWORKMANAGEMENT_SERVICE);
         INetworkManagementService service = INetworkManagementService.Stub.asInterface(b);
@@ -234,6 +240,9 @@ public class Tethering extends INetworkManagementEventObserver.Stub {
         if (isUsb(iface)) {
             found = true;
             usb = true;
+        }
+        if(isBTPan(iface)){
+            found = true;
         }
         if (found == false) {
             Log.d(TAG, iface + " is not a tetherable iface, ignoring");
@@ -328,6 +337,7 @@ public class Tethering extends INetworkManagementEventObserver.Stub {
 
         boolean wifiTethered = false;
         boolean usbTethered = false;
+        boolean btTethered = false;
 
         synchronized (mIfaces) {
             Set ifaces = mIfaces.keySet();
@@ -343,6 +353,8 @@ public class Tethering extends INetworkManagementEventObserver.Stub {
                             usbTethered = true;
                         } else if (isWifi((String)iface)) {
                             wifiTethered = true;
+                        } else if (isBTPan((String)iface)) {
+                            btTethered = true;
                         }
                         activeList.add((String)iface);
                     }
@@ -368,6 +380,8 @@ public class Tethering extends INetworkManagementEventObserver.Stub {
             }
         } else if (wifiTethered) {
             showTetheredNotification(com.android.internal.R.drawable.stat_sys_tether_wifi);
+        } else if (btTethered) {
+            showTetheredNotification(com.android.internal.R.drawable.stat_sys_tether_bluetooth);
         } else {
             clearTetheredNotification();
         }
@@ -454,8 +468,19 @@ public class Tethering extends INetworkManagementEventObserver.Stub {
     private void enableUsbIfaces(boolean enable) {
         //If this is true, it indicates this is a RNDIS (re)connect event
         if (mLegacy && mProbing > 0) {
+            int usbState = 2;
+            // check if usb is mounted (path) or not (empty, returns -1)
+            try {
+                usbState = (new FileInputStream(new File("/sys/devices/platform/usb_mass_storage/lun0/file"))).read();
+                if (usbState != -1) {
+                    mProbing--;
+                }
+            } catch (Exception e) {
+                Log.e(TAG, "Error reading usb ums state :" + e);
+            }
+
             mProbing--;
-            Log.d(TAG, "Skipping RNDIS reconnect, skips remaining: " + mProbing);
+            Log.d(TAG, "Skipping RNDIS reconnect, skips remaining: " + mProbing + ", usbState: " + usbState);
             return;
         }
 
@@ -1195,8 +1220,8 @@ public class Tethering extends INetworkManagementEventObserver.Stub {
                     return null;
                 }
 
-                for (String iface : ifaces) {
-                    for (String regex : mUpstreamIfaceRegexs) {
+                for (String regex : mUpstreamIfaceRegexs) {
+                    for (String iface : ifaces) {
                         if (iface.matches(regex)) {
                             // verify it is active
                             InterfaceConfiguration ifcg = null;

@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2008 The Android Open Source Project
- * Patched by Sven Dawitz; Copyright (C) 2011 CyanogenMod Project
+ * Copyright (C) 2010-2011 CyanogenMod Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -58,6 +58,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import java.util.ArrayList;
+import java.util.UUID;
 
 /**
  * Helper to show the global actions dialog.  Each item is an {@link Action} that
@@ -332,6 +333,21 @@ class GlobalActions implements DialogInterface.OnDismissListener, DialogInterfac
                         return false;
                     }
                 },
+                // next: screenshot
+                new SinglePressAction(com.android.internal.R.drawable.ic_lock_screenshot, R.string.global_action_screenshot) {
+                    public void onPress() {
+                        Intent intent = new Intent("android.intent.action.SCREENSHOT");
+                        mContext.sendBroadcast(intent);
+                    }
+
+                    public boolean showDuringKeyguard() {
+                        return true;
+                    }
+
+                    public boolean showBeforeProvisioning() {
+                        return true;
+                    }
+                },
                 // next: reboot
                 new SinglePressAction(com.android.internal.R.drawable.ic_lock_reboot, R.string.global_action_reboot) {
                     public void onPress() {
@@ -408,12 +424,13 @@ class GlobalActions implements DialogInterface.OnDismissListener, DialogInterfac
         final ProfileManager profileManager = (ProfileManager)mContext.getSystemService(Context.PROFILE_SERVICE);
 
         final Profile[] profiles = profileManager.getProfiles();
-        String activeProfile = profileManager.getActiveProfile().getName();
+        UUID activeProfile = profileManager.getActiveProfile().getUuid();
         final CharSequence[] names = new CharSequence[profiles.length];
+
         int i=0;
         int checkedItem = 0;
         for(Profile profile : profiles){
-            if(profile.getName().equals(activeProfile)){
+            if(profile.getUuid().equals(activeProfile)){
                 checkedItem = i;
                 mChosenProfile = profile;
             }
@@ -433,7 +450,7 @@ class GlobalActions implements DialogInterface.OnDismissListener, DialogInterfac
                 .setPositiveButton(com.android.internal.R.string.yes,
                         new DialogInterface.OnClickListener() {
                             public void onClick(DialogInterface dialog, int which) {
-                                profileManager.setActiveProfile(mChosenProfile.getName());
+                                profileManager.setActiveProfile(mChosenProfile.getUuid());
                             }
                         })
                 .setNegativeButton(com.android.internal.R.string.no,
